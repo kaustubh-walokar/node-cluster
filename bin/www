@@ -18,15 +18,21 @@ var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
 if(cluster.isMaster){
-  console.log(`Master ${process.pid} is running`);
+  console.log(`Master running pid:${process.pid}`);
 
   // Fork workers.
   for (let i = 0; i < numCPUs; i++) {
     cluster.fork();
   }
+  
+  cluster.on('online', function(worker) {
+    console.log('Worker ' + worker.process.pid + ' is online');
+  });
 
-  cluster.on('exit', (worker, code, signal) => {
-    console.log(`worker ${worker.process.pid} died`);
+  cluster.on('exit', function(worker, code, signal) {
+    console.log('Worker ' + worker.process.pid + ' died with code: ' + code + ', and signal: ' + signal);
+    console.log('Starting a new worker');
+    cluster.fork();
   });
 }
 else{
@@ -44,8 +50,9 @@ else{
   server.listen(port);
   server.on('error', onError);
   server.on('listening', onListening);
-  console.log(`Worker ${process.pid} is running`);
+  
 }
+
 /**
  * Normalize a port into a number, string, or false.
  */
