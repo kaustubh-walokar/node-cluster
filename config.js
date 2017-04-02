@@ -6,4 +6,9 @@ config.db={
 	name : 'node-cluster'
 }
 
+config.https={ 
+	key : './cert/client-key.pem',
+	cert : './cert/client-cert.pem'
+}
+
 module.exports = config;
