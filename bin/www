@@ -7,11 +7,12 @@
 var app = require('../app');
 var debug = require('debug')('node-cluster:server');
 var https = require('https');
+var http = require('http');
 const cluster = require('cluster');
 const numCPUs = require('os').cpus().length;
 const fs = require('fs');
 const config = require('../config.js');
-
+const cert = require('./cert.js');
 /**
  * Get port from environment and store in Express.
  */
@@ -43,11 +44,17 @@ else{
   /**
    * Create HTTPS server.
    */
-  const options = {
-    key: fs.readFileSync(config.https.key),
-    cert: fs.readFileSync(config.https.cert)
-  };
-  var server = https.createServer(options,app);
+  // const options = {
+  //   key: fs.readFileSync(config.https.key),
+  //   cert: fs.readFileSync(config.https.cert)
+  // };
+  // var server = https.createServer(options,app);
+  var httpServer = http.createServer(require('redirect-https')({port:3000}));
+  httpServer.listen(8000,function () {
+    console.log("Listening for ACME http-01 challenges on", this.address());
+  });
+
+  var server = https.createServer(cert.options,cert.middleware(app));
 
   /**
    * Listen on provided port, on all network interfaces.
